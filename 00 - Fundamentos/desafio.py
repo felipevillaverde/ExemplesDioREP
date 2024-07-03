@@ -1,3 +1,4 @@
+# Versão de enzomarx sobre o desafio da trilha python da DIO
 import logging
 from rich.console import Console
 from rich.table import Table
