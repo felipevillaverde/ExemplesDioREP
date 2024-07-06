@@ -1,5 +1,5 @@
 import textwrap
-from abc import ABC, abstractclassmethod, abstractproperty
+from abc import ABC, abstractmethod
 from datetime import datetime
 
 
@@ -12,19 +12,16 @@ class ContasIterador:
         return self
 
     def __next__(self):
-        try:
-            conta = self.contas[self._index]
-            return f"""\
+        if self._index >= len(self.contas):
+            raise StopIteration
+        conta = self.contas[self._index]
+        self._index += 1
+        return f"""\
             Agência:\t{conta.agencia}
             Número:\t\t{conta.numero}
             Titular:\t{conta.cliente.nome}
             Saldo:\t\tR$ {conta.saldo:.2f}
         """
-        except IndexError:
-            raise StopIteration
-        finally:
-            self._index += 1
-
 
 class Cliente:
     def __init__(self, endereco):
@@ -33,8 +30,10 @@ class Cliente:
         self.indice_conta = 0
 
     def realizar_transacao(self, conta, transacao):
-        # TODO: validar o número de transações e invalidar a operação se for necessário
-        # print("\n@@@ Você excedeu o número de transações permitidas para hoje! @@@")
+        if len(conta.historico.transacoes_do_dia()) >= 10:
+            print("\n Você excedeu o número de transações permitidas para hoje!")
+            return
+
         transacao.registrar(conta)
 
     def adicionar_conta(self, conta):
@@ -159,7 +158,7 @@ class Historico:
             {
                 "tipo": transacao.__class__.__name__,
                 "valor": transacao.valor,
-                "data": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
+                "data": datetime.now().astimezone().strftime("%d-%m-%Y %H:%M:%S"),
             }
         )
 
@@ -168,18 +167,23 @@ class Historico:
             if tipo_transacao is None or transacao["tipo"].lower() == tipo_transacao.lower():
                 yield transacao
 
-    # TODO: filtrar todas as transações realizadas no dia
     def transacoes_do_dia(self):
-        pass
+        data_atual = datetime.now().astimezone().date()
+        transacoes = []
+        for transacao in self._transacoes:
+            data_transacao = datetime.strptime(transacao["data"], "%d-%m-%Y %H:%M:%S").date()
+            if data_atual == data_transacao:
+                transacoes.append(transacao)
+        return transacoes
 
 
 class Transacao(ABC):
     @property
-    @abstractproperty
+    @abstractmethod
     def valor(self):
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def registrar(self, conta):
         pass
 
@@ -307,7 +311,7 @@ def exibir_extrato(clientes):
     tem_transacao = False
     for transacao in conta.historico.gerar_relatorio():
         tem_transacao = True
-        extrato += f"\n{transacao['tipo']}:\n\tR$ {transacao['valor']:.2f}"
+        extrato += f"\n{transacao['data']}\n{transacao['tipo']}:\n\tR$ {transacao['valor']:.2f}"
 
     if not tem_transacao:
         extrato = "Não foram realizadas movimentações"
@@ -346,7 +350,6 @@ def criar_conta(numero_conta, clientes, contas):
         print("\n@@@ Cliente não encontrado, fluxo de criação de conta encerrado! @@@")
         return
 
-    # NOTE: O valor padrão de limite de saques foi alterado para 50 saques
     conta = ContaCorrente.nova_conta(cliente=cliente, numero=numero_conta, limite=500, limite_saques=50)
     contas.append(conta)
     cliente.contas.append(conta)
@@ -392,5 +395,5 @@ def main():
         else:
             print("\n@@@ Operação inválida, por favor selecione novamente a operação desejada. @@@")
 
-
-main()
+if __name__ == "__main__":
+    main()
