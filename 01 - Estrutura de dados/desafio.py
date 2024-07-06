@@ -4,13 +4,13 @@ import textwrap
 def menu():
     menu = """\n
     ================ MENU ================
-    [d]\tDepositar
-    [s]\tSacar
-    [e]\tExtrato
-    [nc]\tNova conta
-    [lc]\tListar contas
-    [nu]\tNovo usuário
-    [q]\tSair
+    [D]\tDepositar
+    [S]\tSacar
+    [E]\tExtrato
+    [Nc]\tNova conta
+    [Lc]\tListar contas
+    [Nu]\tNovo usuário
+    [Q]\tSair
     => """
     return input(textwrap.dedent(menu))
 
