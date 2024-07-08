@@ -1,6 +1,9 @@
 import textwrap
-from abc import ABC, abstractclassmethod, abstractproperty
+from abc import ABC, abstractmethod
 from datetime import datetime
+from pathlib import Path
+
+ROOT_PATH = Path(__file__).parent
 
 
 class ContasIterador:
@@ -14,12 +17,12 @@ class ContasIterador:
     def __next__(self):
         try:
             conta = self.contas[self._index]
-            return f"""\
-            Agência:\t{conta.agencia}
-            Número:\t\t{conta.numero}
-            Titular:\t{conta.cliente.nome}
-            Saldo:\t\tR$ {conta.saldo:.2f}
-        """
+            return f"""
+Agência:   {conta.agencia}
+Número:    {conta.numero}
+Titular:   {conta.cliente.nome}
+Saldo:     R$ {conta.saldo:.2f}
+"""
         except IndexError:
             raise StopIteration
         finally:
@@ -30,13 +33,11 @@ class Cliente:
     def __init__(self, endereco):
         self.endereco = endereco
         self.contas = []
-        self.indice_conta = 0
 
     def realizar_transacao(self, conta, transacao):
         if len(conta.historico.transacoes_do_dia()) >= 2:
             print("\n@@@ Você excedeu o número de transações permitidas para hoje! @@@")
             return
-
         transacao.registrar(conta)
 
     def adicionar_conta(self, conta):
@@ -50,8 +51,8 @@ class PessoaFisica(Cliente):
         self.data_nascimento = data_nascimento
         self.cpf = cpf
 
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}: ('{self.cpf}')>"
+    def __repr__(self):
+        return f"<{self.__class__.__name__}: ('{self.nome}', '{self.cpf}')>"
 
 
 class Conta:
@@ -92,12 +93,10 @@ class Conta:
 
         if excedeu_saldo:
             print("\n@@@ Operação falhou! Você não tem saldo suficiente. @@@")
-
         elif valor > 0:
             self._saldo -= valor
             print("\n=== Saque realizado com sucesso! ===")
             return True
-
         else:
             print("\n@@@ Operação falhou! O valor informado é inválido. @@@")
 
@@ -121,7 +120,7 @@ class ContaCorrente(Conta):
         self._limite_saques = limite_saques
 
     @classmethod
-    def nova_conta(cls, cliente, numero, limite, limite_saques):
+    def nova_conta(cls, cliente, numero, limite=500, limite_saques=3):
         return cls(numero, cliente, limite, limite_saques)
 
     def sacar(self, valor):
@@ -134,10 +133,8 @@ class ContaCorrente(Conta):
 
         if excedeu_limite:
             print("\n@@@ Operação falhou! O valor do saque excede o limite. @@@")
-
         elif excedeu_saques:
             print("\n@@@ Operação falhou! Número máximo de saques excedido. @@@")
-
         else:
             return super().sacar(valor)
 
@@ -147,11 +144,11 @@ class ContaCorrente(Conta):
         return f"<{self.__class__.__name__}: ('{self.agencia}', '{self.numero}', '{self.cliente.nome}')>"
 
     def __str__(self):
-        return f"""\
-            Agência:\t{self.agencia}
-            C/C:\t\t{self.numero}
-            Titular:\t{self.cliente.nome}
-        """
+        return f"""
+Agência:   {self.agencia}
+C/C:       {self.numero}
+Titular:   {self.cliente.nome}
+"""
 
 
 class Historico:
@@ -188,11 +185,11 @@ class Historico:
 
 class Transacao(ABC):
     @property
-    @abstractproperty
+    @abstractmethod
     def valor(self):
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def registrar(self, conta):
         pass
 
@@ -230,10 +227,12 @@ class Deposito(Transacao):
 def log_transacao(func):
     def envelope(*args, **kwargs):
         resultado = func(*args, **kwargs)
-        data_hora = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        # TODO: alterar a implementação para salvar em arquivo.
-        # f"[{data_hora}] Função '{func.__name__}' executada com argumentos {args} e {kwargs}. Retornou {result}\n"
-        print(f"{data_hora}: {func.__name__.upper()}")
+        data_hora = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        with open(ROOT_PATH / "log.txt", "a") as arquivo:
+            arquivo.write(
+                f"[{data_hora}] Função '{func.__name__}' executada com argumentos {args} e {kwargs}. "
+                f"Retornou {resultado}\n"
+            )
         return resultado
 
     return envelope
@@ -241,15 +240,15 @@ def log_transacao(func):
 
 def menu():
     menu = """\n
-    ================ MENU ================
-    [d]\tDepositar
-    [s]\tSacar
-    [e]\tExtrato
-    [nc]\tNova conta
-    [lc]\tListar contas
-    [nu]\tNovo usuário
-    [q]\tSair
-    => """
+=============== MENU ================
+[d]   Depositar
+[s]   Sacar
+[e]   Extrato
+[nc]  Nova conta
+[lc]  Listar contas
+[nu]  Novo usuário
+[q]   Sair
+=> """
     return input(textwrap.dedent(menu))
 
 
@@ -261,9 +260,7 @@ def filtrar_cliente(cpf, clientes):
 def recuperar_conta_cliente(cliente):
     if not cliente.contas:
         print("\n@@@ Cliente não possui conta! @@@")
-        return
-
-    # FIXME: não permite cliente escolher a conta
+        return None
     return cliente.contas[0]
 
 
@@ -319,18 +316,36 @@ def exibir_extrato(clientes):
         return
 
     print("\n================ EXTRATO ================")
-    extrato = ""
-    tem_transacao = False
-    for transacao in conta.historico.gerar_relatorio():
-        tem_transacao = True
-        extrato += f"\n{transacao['data']}\n{transacao['tipo']}:\n\tR$ {transacao['valor']:.2f}"
-
-    if not tem_transacao:
-        extrato = "Não foram realizadas movimentações"
-
+    transacoes = list(conta.historico.gerar_relatorio())
+    extrato = "\n".join(
+        f"{transacao['data']} - {transacao['tipo']} - R$ {transacao['valor']:.2f}"
+        for transacao in transacoes
+    ) if transacoes else "Não foram realizadas movimentações."
     print(extrato)
-    print(f"\nSaldo:\n\tR$ {conta.saldo:.2f}")
+    print(f"\nSaldo: R$ {conta.saldo:.2f}")
     print("==========================================")
+
+
+@log_transacao
+def criar_conta(numero_conta, clientes):
+    cpf = input("Informe o CPF do cliente: ")
+    cliente = filtrar_cliente(cpf, clientes)
+
+    if not cliente:
+        print("\n@@@ Cliente não encontrado! @@@")
+        return
+
+    conta = ContaCorrente.nova_conta(cliente=cliente, numero=numero_conta)
+    cliente.adicionar_conta(conta)
+    print("\n=== Conta criada com sucesso! ===")
+
+
+@log_transacao
+def listar_contas(contas):
+    print("\n================ CONTAS ================")
+    for conta_str in ContasIterador(contas):
+        print(conta_str)
+    print("=========================================")
 
 
 @log_transacao
@@ -347,32 +362,9 @@ def criar_cliente(clientes):
     endereco = input("Informe o endereço (logradouro, nro - bairro - cidade/sigla estado): ")
 
     cliente = PessoaFisica(nome=nome, data_nascimento=data_nascimento, cpf=cpf, endereco=endereco)
-
     clientes.append(cliente)
 
     print("\n=== Cliente criado com sucesso! ===")
-
-
-@log_transacao
-def criar_conta(numero_conta, clientes, contas):
-    cpf = input("Informe o CPF do cliente: ")
-    cliente = filtrar_cliente(cpf, clientes)
-
-    if not cliente:
-        print("\n@@@ Cliente não encontrado, fluxo de criação de conta encerrado! @@@")
-        return
-
-    conta = ContaCorrente.nova_conta(cliente=cliente, numero=numero_conta, limite=500, limite_saques=50)
-    contas.append(conta)
-    cliente.contas.append(conta)
-
-    print("\n=== Conta criada com sucesso! ===")
-
-
-def listar_contas(contas):
-    for conta in ContasIterador(contas):
-        print("=" * 100)
-        print(textwrap.dedent(str(conta)))
 
 
 def main():
@@ -391,21 +383,20 @@ def main():
         elif opcao == "e":
             exibir_extrato(clientes)
 
-        elif opcao == "nu":
-            criar_cliente(clientes)
-
         elif opcao == "nc":
             numero_conta = len(contas) + 1
-            criar_conta(numero_conta, clientes, contas)
+            criar_conta(numero_conta, clientes)
 
         elif opcao == "lc":
             listar_contas(contas)
+
+        elif opcao == "nu":
+            criar_cliente(clientes)
 
         elif opcao == "q":
             break
 
         else:
-            print("\n@@@ Operação inválida, por favor selecione novamente a operação desejada. @@@")
-
+            print("\n@@@ Operação inválida! Por favor, selecione novamente a operação desejada. @@@")
 
 main()
