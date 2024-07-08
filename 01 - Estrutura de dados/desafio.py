@@ -3,7 +3,7 @@ import textwrap
 
 def menu():
     menu = """\n
-    ================ MENU ================
+    ================ MENU DE OPÇÃO ================
     [1]\tDepositar
     [2]\tSacar
     [3]\tExtrato
