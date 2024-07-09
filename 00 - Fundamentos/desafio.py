@@ -5,7 +5,7 @@ menu = """
 [e] Extrato
 [q] Sair
 
-=> """
+Digite o número da opção escolhida: '''
 
 saldo = 0
 limite = 500
