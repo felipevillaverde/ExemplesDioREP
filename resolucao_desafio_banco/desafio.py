@@ -1,49 +1,82 @@
 import os
 from time import sleep
-#Criar um sistema bancário com as operações : sacar, depositar, e vizualizar extrato
 
 menu = '''
 [1] - Depositar
 [2] - Sacar
-[3] - Extrato
-[4] - Sair
+[3] - extrato
+[4] - sair
 '''
 
-saldo , num_saques_diarios = (0, 0)
+saldo = 0
+num_saques_dia = 0
 extrato = ''
-LIMITE_SAQUE = 3
+LIMITE_SAQUE_DIARIO = 3
 LIMITE = 500.00
 
 while True:
+  os.system('cls' if os.name == 'nt' else 'clear')
 
-    opcao = input(f'{menu} Escolha uma opção: ')
+  msg = 'Olá, Seja bem vindo!'
 
-    if opcao == '1':
-        valor = float(input('Informw o valor do depósito: '))
+  print(f'{msg.center(50, "=")}')
+  opcao = input(f'{menu} Escolha uma opção: ')
 
-        if valor > 0:
-            saldo += valor
-            print('Depósito realizado com sucesso')
-            extrato += f'Depósito de R${valor:.2f} realizado. Saldo atual de R${saldo:.2f}\n'
-        else:
-            print('operação não realizada, o valor informado é inválido')
-    
-    elif opcao == '2':
-        valor = float(input('Informe o valor a sacar: '))
+  if opcao == '1':
+    valor = float(input('Informe o valor do depósito: ')).strip()
 
-        if valor <= saldo:
-            saldo -= valor
-            extrato += f'Saque de R${valor} realizado. Saldo atual de R${saldo:.2f}\n'
-            print('Saque realizado com sucesso')
-        
-        else:
-            print('Saldo insuficiente')
-    
-    elif opcao == '3':
-        print(extrato)
-
-    elif opcao == '4':
-        break
+    if valor > 0:
+      saldo += valor
+      extrato += f'Depósito: R$ {valor:.2f}. Saldo total de R${saldo:.2f}\n'
+      print('Depoisitado com sucesso!')
+      sleep(2)
 
     else:
-        print('opção inválida!')
+      print('O valor informado é inválido!')
+      sleep(2) 
+  
+  elif opcao == '2':
+    valor = float(input('Informe o valor do Saque: ')).strip()
+
+    # modifiquei as minhas condicoes criando variaveis para cada uma delas assim como no codigo do professor Guilherme pois achei  mais legivel como codigo
+    qtd_saldo = valor > saldo
+
+    limite_qtd_saques = num_saques_dia >= LIMITE_SAQUE_DIARIO
+
+    limite_valor_saque = valor > LIMITE
+
+    if qtd_saldo:
+      print('Saldo insuficiente.')
+      sleep(2)
+
+    elif limite_qtd_saques:
+      print('Limite de saques diários atingido.')
+      sleep(2)
+      
+    elif limite_valor_saque:
+      print('Valor de saque excede o limite.')
+      sleep(2)
+      
+    else:
+      saldo -= valor 
+      num_saques_dia += 1
+      extrato += f'Saque: R$ {valor:.2f}. Saldo total de R${saldo:.2f}\n'
+      print('Saque realizado com sucesso.')
+      sleep(2)
+
+  elif opcao == '3':
+    if not extrato:
+      print('Não há foram realizadas movimentações')
+      sleep(2)
+    else:
+      print(extrato)
+    print('Pressione enter para continuar: ')
+    input()
+
+  elif opcao == '4':
+    print('Obrigado por usar nosso banco!')
+    break
+
+  else:
+    print('opção inválida, tente novamente')
+    sleep(2)
