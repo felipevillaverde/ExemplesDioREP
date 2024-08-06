@@ -23,7 +23,7 @@ while True:
   opcao = input(f'{menu} Escolha uma opção: ')
 
   if opcao == '1':
-    valor = float(input('Informe o valor do depósito: ')).strip()
+    valor = float(input('Informe o valor do depósito: '))
 
     if valor > 0:
       saldo += valor
@@ -36,7 +36,7 @@ while True:
       sleep(2) 
   
   elif opcao == '2':
-    valor = float(input('Informe o valor do Saque: ')).strip()
+    valor = float(input('Informe o valor do Saque: '))
 
     # modifiquei as minhas condicoes criando variaveis para cada uma delas assim como no codigo do professor Guilherme pois achei  mais legivel como codigo
     qtd_saldo = valor > saldo
