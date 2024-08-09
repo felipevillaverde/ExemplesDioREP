@@ -15,6 +15,7 @@ LIMITE_SAQUE_DIARIO = 3
 LIMITE = 500.00
 
 while True:
+  #usei esta função da biblioteca os para estar limpando o terminal ao final de cada iteração
   os.system('cls' if os.name == 'nt' else 'clear')
 
   msg = 'Olá, Seja bem vindo!'
