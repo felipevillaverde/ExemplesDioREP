@@ -58,12 +58,14 @@ while True:
       print('Valor de saque excede o limite.')
       sleep(2)
       
-    else:
+    elif valor > 0:
       saldo -= valor 
       num_saques_dia += 1
       extrato += f'Saque: R$ {valor:.2f}. Saldo total de R${saldo:.2f}\n'
       print('Saque realizado com sucesso.')
       sleep(2)
+    else:
+      print('operação não realizada, o valor informado é inválido')
 
   elif opcao == '3':
     if not extrato:
