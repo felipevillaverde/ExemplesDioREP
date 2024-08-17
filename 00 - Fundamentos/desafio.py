@@ -1,6 +1,7 @@
 import os
 from time import sleep
 
+
 menu = '''
 [1] - Depositar
 [2] - Sacar
