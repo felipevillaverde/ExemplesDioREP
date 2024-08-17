@@ -1,13 +1,10 @@
 # Separar o desafio em funcoes 
-def sacar(*, saldo, valor, extrato, num_saques, LIMITE_SAQUES): #keyword only
-    LIMITE_SAQUES = 500.00
-    valor = float(input('Informe o valor a sacar: '))
-
+def sacar(*, saldo, valor, extrato, num_qtd_saques, LIMITE_VALOR_SAQUES): #keyword only
     qtd_saldo = valor > saldo
 
-    limite_qtd_saques = num_saques > 3
+    limite_qtd_saques = num_qtd_saques > 3
 
-    limite_valor_saque = valor > LIMITE_SAQUES
+    limite_valor_saque = valor > LIMITE_VALOR_SAQUES
 
     if qtd_saldo:
         print('Saldo insuficiente')
@@ -18,22 +15,31 @@ def sacar(*, saldo, valor, extrato, num_saques, LIMITE_SAQUES): #keyword only
     elif limite_valor_saque:
         print('Você não pode sacar mais do que o seu valor limite')
 
-    else:
+    elif valor > 0:
         saldo -= valor
+        extrato += f'Saque: R$ {valor:.2f}\n'
+        num_qtd_saques += 1
+    else:
+        print('operação não realizada, o valor informado é inválido')
+    return saldo, extrato
+
 
 
 def depositar(saldo, valor, extrato):#positional only
-    valor = float(input('Informe o valor a depositar: '))
     if valor < 0:
         print('operação não realizada, valor inválido')
     else:
         saldo += valor
-        extrato += f'Depósito: R$ {valor:.2f}. Saldo total de R${saldo:.2f}\n'
+        extrato += f'Depósito: R$ {valor:.2f}\n'
     return saldo, extrato
 
 
-def extrato(saldo, *, extrato):#positional only and keyword only
-    print('Não há foram realizadas movimentações' if not extrato else extrato)
+def exibir_extrato(saldo, *, extrato):#positional only and keyword only
+    if not extrato:
+        print('Não foram realizadas movimentações')
+    else:   
+        extrato += f'Saldo atual de R${saldo:.2f}'
+        print(extrato)
 
 
 def criar_usuario(lista):
@@ -48,7 +54,12 @@ def main():
     """_summary_
     funcao que exibi e chama as outras funções
     """
+    saldo = 0
+    extrato = ''
+    num_qtd_saques = 3
+    LIMITE_VALOR_SAQUES = 500.00
     while True:
+
         menu = '''
         [1] - Depositar
         [2] - Sacar
@@ -57,17 +68,24 @@ def main():
         [5] - Criar conta corrente
         [6] - Sair
         '''
+        print(menu)
         opcao = input('Escolha uma opção: ')
 
         if opcao == '1':
-            pass
+            valor = float(input('Informe o valor a depositar: '))
+            saldo, extrato = depositar(saldo, valor, extrato)
+
         elif opcao == '2':
-            pass
+                valor = float(input('Informe o valor a sacar: '))
+                saldo, extrato = sacar(saldo=saldo, valor=valor, extrato=extrato, num_qtd_saques=num_qtd_saques, LIMITE_VALOR_SAQUES=LIMITE_VALOR_SAQUES)
+
         elif opcao == '3':
-            pass
+            exibir_extrato(saldo, extrato=extrato)
         elif opcao == '4':
             pass
         elif opcao == '5':
             pass
         elif opcao == '6':
             break
+
+main()
