@@ -42,11 +42,14 @@ def exibir_extrato(saldo, *, extrato):#positional only and keyword only
         print(extrato)
 
 
-def criar_usuario(lista):
-    pass
+def criar_usuario(lista_usuarios, usuario, nome, data_nascimento, cpf, endereco):
+    clientes = {}
+    clientes.update({usuario : {'nome': f'{nome}', 'data_nascimento': f'{data_nascimento}', 'cpf': f'{cpf}', 'endereço': f'{endereco}'}})
+    lista_usuarios.append(clientes)
+    return lista_usuarios
 
 
-def criar_conta_corrente():
+def criar_conta_corrente(lista_contas, num_conta, usuario):
     pass
 
 
@@ -54,6 +57,8 @@ def main():
     """_summary_
     funcao que exibi e chama as outras funções
     """
+    lista_usuarios = list()
+    lista_contas = list()
     saldo = 0
     extrato = ''
     num_qtd_saques = 3
@@ -81,6 +86,7 @@ def main():
 
         elif opcao == '3':
             exibir_extrato(saldo, extrato=extrato)
+
         elif opcao == '4':
             pass
         elif opcao == '5':
