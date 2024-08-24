@@ -1,3 +1,10 @@
+variavel = "x"
+banco = "Baú da Felicidade"
+print(variavel.center(30,"="))
+print(banco.center(30,"="))
+print(variavel.center(30,"="))
+
+
 menu = """
 
 [d] Depositar
