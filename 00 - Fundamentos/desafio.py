@@ -1,9 +1,9 @@
-variavel = "x"
-banco = "Baú da Felicidade"
-print(variavel.center(30,"="))
-print(banco.center(30,"="))
-print(variavel.center(30,"="))
+def título (txt):
+    print('-' * 30)
+    print(txt)
+    print('-' *30)
 
+título('          Bem Vindo'   )      
 
 menu = """
 
